@@ -198,6 +198,7 @@ a{color:var(--accent)}
       <label class="chip" id="lblWrap2" style="padding:4px 10px"><input type="checkbox" id="lblS"> nazwy stolic</label>
       <button class="sm" id="zIn" title="Przybliż">+</button>
       <button class="sm" id="zOut" title="Oddal">−</button>
+      <button class="sm" id="zReset" title="Pokaż całą mapę">⟲ cała mapa</button>
     </div>
     <div class="mapbox" id="mapbox">
       <svg id="map" class="learn" role="img" aria-label="Mapa polityczna Azji"></svg>
@@ -315,6 +316,7 @@ svg.addEventListener('wheel', e=>{
 }, {passive:false});
 document.getElementById('zIn').onclick = ()=>zoomAt(0.7, view.x+view.w/2, view.y+view.h/2);
 document.getElementById('zOut').onclick = ()=>zoomAt(1/0.7, view.x+view.w/2, view.y+view.h/2);
+document.getElementById('zReset').onclick = ()=>{ view = {...FULL}; clampView(); applyView(); };
 
 // przeciąganie (mysz i jeden palec) oraz zoom dwoma palcami
 const ptrs = new Map(); let drag = null, moved = false, pinch = null;
