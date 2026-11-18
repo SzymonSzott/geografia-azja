@@ -6,18 +6,23 @@ do nauki i test „wskaż na mapie”.
 ## Nauka
 
 - uproszczona mapa polityczna 49 państw Azji z punktami stolic
+- podział na cztery części do nauki osobno: 1. Bliski Wschód i Kaukaz (18 państw), 2. Azja Środkowa
+  i Południowa (13), 3. Azja Północna i Wschodnia (7, z Rosją), 4. Azja Południowo-Wschodnia (11);
+  po wybraniu części pozostałe państwa są wyszarzone i nieaktywne, lista pod mapą pokazuje tylko tę część,
+  a mapa jest obrócona tak, żeby w środku części północ była u góry (jak w atlasie)
 - po najechaniu myszką (na telefonie: po dotknięciu) na państwo albo punkt stolicy pojawia się nazwa
   państwa i jego stolicy, przy niektórych państwach z krótką uwagą (np. Tajwan, Izrael, Sri Lanka)
 - opcjonalne podpisy państw i stolic na mapie
 - przybliżanie kółkiem myszy, przyciskami +/− albo dwoma palcami; przesuwanie przez przeciąganie;
-  szybkie widoki regionów (Bliski Wschód i Kaukaz, Azja Środkowa i Południowa, Wschodnia, Południowo-Wschodnia)
+  „reset widoku” wraca do całej wybranej części
 - alfabetyczna lista państw i stolic: najechanie podświetla państwo, kliknięcie przybliża do niego mapę
 
 ## Test
 
 - mapa bez nazw: tylko kontury państw i punkty stolic
 - pytania: „Wskaż na mapie państwo: …” albo „Wskaż na mapie stolicę: …” (do wyboru: państwa, stolice albo
-  jedno i drugie), z całej Azji albo z wybranego regionu; 10 / 20 / wszystkie pytania w losowej kolejności
+  jedno i drugie), z całej Azji albo z jednej z czterech części (domyślnie tej, której się uczono);
+  10 / 20 / wszystkie pytania w losowej kolejności
 - bardzo małe państwa (Bahrajn, Singapur, Malediwy, Katar, Brunei…) mają przerywane kółko, które też można kliknąć
 - po błędnej odpowiedzi kliknięte miejsce jest czerwone z nazwą, poprawne — zielone i pulsuje
 - wynik z podziałem na państwa i stolice, tabela błędów i „Powtórz błędne”

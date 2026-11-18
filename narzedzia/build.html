@@ -40,6 +40,14 @@ const rest = geoms.filter(g=>!asiaIds.has(g.id) && g.properties.name!=='N. Cypru
 const tlo = path(topojson.merge(WORLD,rest));
 const pal = path(topojson.feature(WORLD, geoms.find(g=>g.id==='275')));
 const grat = path(d3.geoGraticule().step([20,20])());
-document.getElementById('OUT').textContent = JSON.stringify({W,H,panstwa:out,tlo,pal,grat});
+// kierunek północy w środku każdej części mapy (stopnie, + = północ odchylona w prawo);
+// strona obraca widok części o -kąt, żeby północ była u góry
+const SRODKI = {bw:[45,30], ap:[72,30], aw:[115,42], apw:[112,8]};
+const polnoc = {};
+Object.entries(SRODKI).forEach(([k,[lo,la]])=>{
+  const a = proj([lo,la]), b = proj([lo,la+1]);
+  polnoc[k] = r1(Math.atan2(b[0]-a[0], a[1]-b[1]) * 180 / Math.PI);
+});
+document.getElementById('OUT').textContent = JSON.stringify({W,H,polnoc,panstwa:out,tlo,pal,grat});
 }catch(e){ document.getElementById('OUT').textContent='ERR '+e; }
 </script>

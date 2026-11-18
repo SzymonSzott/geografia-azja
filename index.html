@@ -99,6 +99,11 @@ legend{font-weight:600;font-size:.95rem;margin-bottom:6px;padding:0}
 .learn .c,.learn .ring,.learn .hit,.learn .terr,.act-p .c,.act-p .ring,.act-s .hit{cursor:pointer}
 .act-p .cap,.act-p .hit{pointer-events:none}
 .act-s .c,.act-s .ring,.act-s .terr,.quiz .terr{pointer-events:none}
+#map .off{pointer-events:none}
+.c.off,.terr.off{fill:var(--rest) !important;stroke:var(--rest-line)}
+.ring.off,.cap.off,.hit.off,.lbl.off{display:none}
+#regBtns button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) #regBtns button.on{color:#0e1a1f} }
 .c.ok{fill:var(--ok) !important} .c.no{fill:var(--no) !important}
 .ring.ok{stroke:var(--ok) !important;stroke-width:3 !important;stroke-dasharray:none !important}
 .ring.no{stroke:var(--no) !important;stroke-width:3 !important;stroke-dasharray:none !important}
@@ -162,7 +167,7 @@ a{color:var(--accent)}
   <div class="card hide" id="setup">
     <fieldset><legend>Co wskazujesz na mapie?</legend><div class="opts" id="fTyp"></div></fieldset>
     <fieldset><legend>Liczba pytań</legend><div class="opts" id="fIle"></div></fieldset>
-    <fieldset><legend>Obszar</legend><div class="opts" id="fReg"></div></fieldset>
+    <fieldset><legend>Część mapy</legend><div class="opts" id="fReg"></div></fieldset>
     <div class="row"><button class="primary" id="start">Rozpocznij test</button><span class="count" id="cWybor"></span></div>
     <p class="note">Na mapie testowej są tylko kontury państw i punkty stolic, bez nazw. Bardzo małe państwa
       (np. Bahrajn, Singapur, Malediwy) są otoczone przerywanym kółkiem, które też można kliknąć.
@@ -201,7 +206,7 @@ a{color:var(--accent)}
       <label class="chip" id="lblWrap2" style="padding:4px 10px"><input type="checkbox" id="lblS"> nazwy stolic</label>
       <button class="sm" id="zIn" title="Przybliż">+</button>
       <button class="sm" id="zOut" title="Oddal">−</button>
-      <button class="sm" id="zReset" title="Pokaż całą mapę">⟲ cała mapa</button>
+      <button class="sm" id="zReset" title="Pokaż całą wybraną część mapy">⟲ reset widoku</button>
     </div>
     <div class="mapbox" id="mapbox">
       <svg id="map" class="learn" role="img" aria-label="Mapa polityczna Azji"></svg>
@@ -212,7 +217,7 @@ a{color:var(--accent)}
 
   <!-- lista do nauki -->
   <div class="card" id="learnList">
-    <h2>Państwa i stolice</h2>
+    <h2 id="listTitle">Państwa i stolice</h2>
     <ul class="list" id="list"></ul>
     <p class="note">Najedź na nazwę, aby zobaczyć państwo na mapie. Kliknięcie przybliża mapę do państwa.</p>
   </div>
@@ -243,10 +248,18 @@ function el(tag, attrs, parent){
 }
 svg.setAttribute('viewBox', `0 0 ${MAPA.W} ${MAPA.H}`);
 el('rect', {class:'sea', x:-MAPA.W, y:-MAPA.H, width:MAPA.W*3, height:MAPA.H*3}, svg);
-el('path', {class:'grat', d:MAPA.grat}, svg);
-el('path', {class:'rest', d:MAPA.tlo}, svg);
-const gC = el('g', {}, svg), gR = el('g', {}, svg), gL = el('g', {}, svg), gS = el('g', {}, svg), gLS = el('g', {}, svg), gX = el('g', {}, svg);
-el('path', {class:'terr', d:MAPA.pal, 'data-terr':'pal'}, gC);
+// gRot obraca mapę w widoku części, żeby północ była u góry
+const gRot = el('g', {}, svg);
+el('path', {class:'grat', d:MAPA.grat}, gRot);
+el('path', {class:'rest', d:MAPA.tlo}, gRot);
+const gC = el('g', {}, gRot), gR = el('g', {}, gRot), gL = el('g', {}, gRot), gS = el('g', {}, gRot), gLS = el('g', {}, gRot), gX = el('g', {}, gRot);
+let rot = {a:0, px:0, py:0};
+function toOuter(x, y){                  // punkt mapy -> współrzędne widoku (po obrocie)
+  if(!rot.a) return [x, y];
+  const r = rot.a*Math.PI/180, c = Math.cos(r), s = Math.sin(r), dx = x-rot.px, dy = y-rot.py;
+  return [rot.px + dx*c - dy*s, rot.py + dx*s + dy*c];
+}
+const terr = el('path', {class:'terr', d:MAPA.pal, 'data-terr':'pal'}, gC);
 const nodes = {};                        // id -> {c, ring, cap, hit, lp, ls}
 P.forEach(p=>{
   const n = nodes[p.id] = {};
@@ -276,6 +289,9 @@ function applyView(){
     n.lp.setAttribute('font-size', 11*u); n.lp.style.strokeWidth = 3*u+'px';
     n.ls.setAttribute('font-size', 10*u); n.ls.style.strokeWidth = 3*u+'px';
     n.ls.setAttribute('x', p.x + 5*u); n.ls.setAttribute('y', p.y + 3.5*u);
+    // podpisy zawsze poziomo, także w obróconym widoku części
+    n.lp.setAttribute('transform', rot.a ? `rotate(${-rot.a} ${p.cx} ${p.cy})` : '');
+    n.ls.setAttribute('transform', rot.a ? `rotate(${-rot.a} ${p.x} ${p.y})` : '');
   });
   gX.querySelectorAll('circle').forEach(c=>c.setAttribute('r', 16*u));
 }
@@ -305,10 +321,13 @@ function fitBox(b, pad){
 function bboxOf(ids){
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   ids.forEach(id=>{
-    const b = nodes[id].c.getBBox(), p = byId[id];
-    // Rosja jest ogromna – w regionach bierzemy tylko stolicę
-    const bb = (id==='643') ? {x:p.x-20,y:p.y-20,width:40,height:40} : b;
-    x0=Math.min(x0,bb.x); y0=Math.min(y0,bb.y); x1=Math.max(x1,bb.x+bb.width); y1=Math.max(y1,bb.y+bb.height);
+    // Rosja jest ogromna – przy dopasowaniu widoku części ją pomijamy
+    if(id==='643' && ids.length > 1) return;
+    const b = nodes[id].c.getBBox();
+    [[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].forEach(([x,y])=>{
+      const [ox,oy] = toOuter(x,y);
+      x0=Math.min(x0,ox); y0=Math.min(y0,oy); x1=Math.max(x1,ox); y1=Math.max(y1,oy);
+    });
   });
   return {x:x0, y:y0, w:x1-x0, h:y1-y0};
 }
@@ -319,7 +338,7 @@ svg.addEventListener('wheel', e=>{
 }, {passive:false});
 document.getElementById('zIn').onclick = ()=>zoomAt(0.7, view.x+view.w/2, view.y+view.h/2);
 document.getElementById('zOut').onclick = ()=>zoomAt(1/0.7, view.x+view.w/2, view.y+view.h/2);
-document.getElementById('zReset').onclick = ()=>{ view = {...FULL}; clampView(); applyView(); };
+document.getElementById('zReset').onclick = ()=>fitPart(czesc);
 
 // przeciąganie (mysz i jeden palec) oraz zoom dwoma palcami
 const ptrs = new Map(); let drag = null, moved = false, pinch = null;
@@ -359,25 +378,57 @@ svg.addEventListener('pointerup', endPtr);
 svg.addEventListener('pointercancel', endPtr);
 window.addEventListener('resize', applyView);
 
-/* regiony */
+/* cztery części mapy */
 const REGIONY = {
   all:   {n:'Cała Azja', ids:null},
-  bw:    {n:'Bliski Wschód i Kaukaz', ids:['792','196','760','422','376','400','368','364','414','682','048','634','784','512','887','268','051','031']},
-  ap:    {n:'Azja Środkowa i Południowa', ids:['398','860','795','417','762','004','586','356','524','064','050','144','462']},
-  aw:    {n:'Azja Wschodnia', ids:['156','496','410','408','392','158']},
-  apw:   {n:'Azja Południowo-Wschodnia', ids:['104','764','418','116','704','458','702','096','360','608','626']}
+  bw:    {n:'1. Bliski Wschód i Kaukaz', ids:['792','196','760','422','376','400','368','364','414','682','048','634','784','512','887','268','051','031']},
+  ap:    {n:'2. Azja Środkowa i Południowa', ids:['398','860','795','417','762','004','586','356','524','064','050','144','462']},
+  aw:    {n:'3. Azja Północna i Wschodnia', ids:['643','156','496','410','408','392','158']},
+  apw:   {n:'4. Azja Południowo-Wschodnia', ids:['104','764','418','116','704','458','702','096','360','608','626']}
 };
 const regOf = {};
 Object.entries(REGIONY).forEach(([k,r])=>{ if(r.ids) r.ids.forEach(id=>regOf[id]=k); });
-regOf['643'] = 'ap';                    // Rosja – razem z Azją Środkową
-function showRegion(k){
+function fitPart(k){
   if(k==='all'){ view = {...FULL}; clampView(); applyView(); return; }
   fitBox(bboxOf(REGIONY[k].ids));
 }
+/* aktywna część: pozostałe państwa są wyszarzone i nieaktywne */
+let czesc = 'all';
+function setPart(k){
+  czesc = k;
+  P.forEach(p=>{
+    const off = k!=='all' && regOf[p.id]!==k, n = nodes[p.id];
+    [n.c, n.ring, n.cap, n.hit, n.lp, n.ls].forEach(e=>{ if(e) e.classList.toggle('off', off); });
+  });
+  terr.classList.toggle('off', k!=='all' && k!=='bw');
+  document.querySelectorAll('#regBtns button').forEach(b=>b.classList.toggle('on', b.dataset.k===k));
+  let ile = 0;
+  document.querySelectorAll('#list li').forEach(li=>{
+    const off = k!=='all' && regOf[li.dataset.id]!==k;
+    li.classList.toggle('hide', off); if(!off) ile++;
+  });
+  document.getElementById('listTitle').textContent =
+    k==='all' ? `Państwa i stolice (${ile})` : `${REGIONY[k].n} — ${ile} państw`;
+  // obrót: północ u góry w środku wybranej części
+  rot = {a:0, px:0, py:0};
+  if(k!=='all'){
+    const b = bboxOf(REGIONY[k].ids);
+    rot = {a:-MAPA.polnoc[k], px:b.x+b.w/2, py:b.y+b.h/2};
+  }
+  gRot.setAttribute('transform', rot.a ? `rotate(${rot.a} ${rot.px} ${rot.py})` : '');
+  fitPart(k);
+}
+let czescNauki = 'all';
+try{ const z = localStorage.getItem('azja-czesc'); if(z && REGIONY[z]) czescNauki = z; }catch(e){}
 const rb = document.getElementById('regBtns');
+rb.insertAdjacentHTML('beforeend', '<span class="count">Ucz się części:</span>');
 Object.entries(REGIONY).forEach(([k,r])=>{
-  const b = document.createElement('button'); b.className='sm'; b.textContent = r.n;
-  b.onclick = ()=>showRegion(k); rb.appendChild(b);
+  const b = document.createElement('button'); b.className='sm'; b.textContent = r.n; b.dataset.k = k;
+  b.onclick = ()=>{
+    czescNauki = k; setPart(k);
+    try{ localStorage.setItem('azja-czesc', k); }catch(e){}
+  };
+  rb.appendChild(b);
 });
 
 /* podpisy */
@@ -441,8 +492,7 @@ P.slice().sort((a,b)=>collator.compare(a.n,b.n)).forEach(p=>{
   li.onmouseenter = ()=>{ highlight(p.id, true); nodes[p.id].cap.classList.add('hi'); applyView(); };
   li.onmouseleave = ()=>{ highlight(p.id, false); nodes[p.id].cap.classList.remove('hi'); applyView(); };
   li.onclick = ()=>{
-    const b = p.id==='643' ? nodes[p.id].c.getBBox() : bboxOf([p.id]);
-    fitBox({x:b.x, y:b.y, w:b.w ?? b.width, h:b.h ?? b.height}, 80);
+    fitBox(bboxOf([p.id]), 80);
     document.getElementById('mapcard').scrollIntoView({behavior:'smooth', block:'start'});
   };
   ul.appendChild(li);
@@ -496,17 +546,28 @@ function setTryb(t){
   if(t==='test'){ gL.style.display='none'; gLS.style.display='none'; }
   else { gL.style.display = cbP.checked?'':'none'; gLS.style.display = cbS.checked?'':'none'; }
   svg.setAttribute('class', t==='nauka' ? 'learn' : 'quiz');
-  applyView();
+  document.getElementById('regBtns').classList.toggle('hide', t==='test');
+  if(t==='nauka') setPart(czescNauki); else applyView();
 }
 document.getElementById('tabNauka').onclick = ()=>{ if(T.timer) clearTimeout(T.timer); setTryb('nauka'); };
-document.getElementById('tabTest').onclick = ()=>{ if(T.timer) clearTimeout(T.timer); setTryb('setup'); };
+document.getElementById('tabTest').onclick = ()=>{
+  if(T.timer) clearTimeout(T.timer);
+  // domyślnie test z tej części mapy, której się uczono
+  if(tryb === 'nauka'){
+    T.reg = czescNauki;
+    const keys = Object.keys(REGIONY);
+    document.querySelectorAll('#fReg input').forEach((inp,ix)=>{ inp.checked = keys[ix]===T.reg; inp.closest('.chip').classList.toggle('on', inp.checked); });
+    refreshSetup();
+  }
+  setTryb('setup');
+};
 document.getElementById('toLearn').onclick = ()=>setTryb('nauka');
 document.getElementById('again').onclick = ()=>setTryb('setup');
 
 function startTest(lista){
   T.pula = lista; T.i = 0; T.wyniki = [];
   setTryb('test');
-  if(T.reg !== 'all') showRegion(T.reg); else showRegion('all');
+  setPart(T.reg);
   stat(`azja/test-start/${T.typ}/${T.reg}/pytan-${lista.length}`, 'Azja: rozpoczęcie testu');
   pokaz();
 }
@@ -598,7 +659,7 @@ function wynik(){
   setTryb('wynik');
 }
 
-applyView();
+setPart(czescNauki);
 </script>
 </body>
 </html>
