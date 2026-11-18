@@ -109,6 +109,8 @@ legend{font-weight:600;font-size:.95rem;margin-bottom:6px;padding:0}
 .ring.no{stroke:var(--no) !important;stroke-width:3 !important;stroke-dasharray:none !important}
 .cap.hi{fill:var(--hi);stroke:var(--ink)}
 .cap.ok{fill:var(--ok);stroke:var(--ink)} .cap.no{fill:var(--no);stroke:var(--ink)}
+.lbl.fbl{font-style:normal;font-weight:700}
+.lbl.fbl.ok{fill:var(--good)} .lbl.fbl.no{fill:var(--bad)}
 .pulse{fill:none;stroke:var(--ok);stroke-width:3;animation:pulse 1.1s ease-out infinite}
 @keyframes pulse{from{opacity:1} to{opacity:0}}
 .tip{position:absolute;pointer-events:none;background:var(--card);color:var(--ink);border:1px solid var(--line);
@@ -294,6 +296,12 @@ function applyView(){
     n.ls.setAttribute('transform', rot.a ? `rotate(${-rot.a} ${p.x} ${p.y})` : '');
   });
   gX.querySelectorAll('circle').forEach(c=>c.setAttribute('r', 16*u));
+  gX.querySelectorAll('text').forEach(t=>{          // podpisy po błędnej odpowiedzi
+    const x = +t.dataset.x, y = +t.dataset.y;
+    t.setAttribute('font-size', 13*u); t.style.strokeWidth = 4*u+'px';
+    t.setAttribute('x', x + 9*u); t.setAttribute('y', y + 4.5*u);
+    t.setAttribute('transform', rot.a ? `rotate(${-rot.a} ${x} ${y})` : '');
+  });
 }
 function clampView(){
   view.w = Math.min(FULL.w, Math.max(FULL.w/14, view.w));
@@ -613,7 +621,14 @@ function answer(tg){
     const k = byId[tg.id], p = byId[it.id];
     fb.textContent = it.t==='p'
       ? `✗ To jest ${k.n}. ${p.n} zaznaczono na zielono.`
-      : `✗ To jest ${k.s} (${k.n}). ${p.s} zaznaczono na zielono.`;
+      : `✗ Kliknięto ${k.s} — stolicę państwa ${k.n}. Poprawnie: ${p.s} — stolica państwa ${p.n} (na zielono).`;
+    if(it.t==='s'){
+      // podpisy przy obu punktach na mapie: miasto i państwo
+      [[p,'ok'],[k,'no']].forEach(([q,cls])=>{
+        const t = el('text', {class:'lbl cap-l fbl '+cls, 'data-x':q.x, 'data-y':q.y}, gX);
+        t.textContent = `${q.s} (${q.n})`;
+      });
+    }
     // pulsujące kółko przy poprawnej odpowiedzi, żeby było widać nawet małe państwo
     const c = it.t==='p' ? [p.cx, p.cy] : [p.x, p.y];
     el('circle', {class:'pulse', cx:c[0], cy:c[1], r:16}, gX);
