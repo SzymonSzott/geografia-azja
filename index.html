@@ -110,6 +110,9 @@ legend{font-weight:600;font-size:.95rem;margin-bottom:6px;padding:0}
   border-radius:8px;padding:6px 10px;font-size:.88rem;box-shadow:0 4px 14px rgba(0,0,0,.15);
   max-width:280px;z-index:5;line-height:1.35}
 .tip b{display:block;font-size:.98rem}
+.tip .kind{display:block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
+.tip .kind.p{color:var(--accent)}
+.tip .kind.s{color:var(--cap)}
 .tip i{display:block;color:var(--muted);font-size:.8rem;margin-top:3px;font-style:normal}
 .hint{position:absolute;left:10px;bottom:8px;font-size:.78rem;color:var(--muted);background:var(--card);
   border-radius:6px;padding:2px 8px;opacity:.9;pointer-events:none}
@@ -385,11 +388,11 @@ cbS.onchange = ()=>{ gLS.style.display = cbS.checked ? '' : 'none'; cbS.closest(
 /* ======================= tryb nauki: podpowiedzi ======================= */
 let tryb = 'nauka';
 function tipHtml(t, id){
-  if(id === 'pal') return `<b>Palestyna</b>terytoria palestyńskie (Zachodni Brzeg; Strefa Gazy jest zbyt mała na tej mapie)<i>Nie ma ich w teście.</i>`;
+  if(id === 'pal') return `<span class="kind p">terytorium</span><b>Palestyna</b>terytoria palestyńskie (Zachodni Brzeg; Strefa Gazy jest zbyt mała na tej mapie)<i>Nie ma ich w teście.</i>`;
   const p = byId[id];
   return t === 's'
-    ? `<b>${p.s}</b>stolica: ${p.n}${p.u?`<i>${p.u}</i>`:''}`
-    : `<b>${p.n}</b>stolica: ${p.s}${p.u?`<i>${p.u}</i>`:''}`;
+    ? `<span class="kind s">● stolica</span><b>${p.s}</b>stolica państwa: ${p.n}${p.u?`<i>${p.u}</i>`:''}`
+    : `<span class="kind p">■ państwo</span><b>${p.n}</b>jego stolica: ${p.s}${p.u?`<i>${p.u}</i>`:''}`;
 }
 function showTip(html, cx, cy){
   tip.innerHTML = html; tip.classList.remove('hide');
