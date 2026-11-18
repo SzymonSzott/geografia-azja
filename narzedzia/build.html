@@ -1,0 +1,45 @@
+<!doctype html><meta charset="utf-8"><body><pre id="OUT"></pre>
+<script src="d3.min.js"></script><script src="topojson-client.min.js"></script>
+<script src="world.js"></script><script src="panstwa.js"></script>
+<script>
+try{
+const W=1000; let H;
+const geoms = WORLD.objects.countries.geometries;
+const byId = {}; PANSTWA.forEach(p=>byId[p[0]]=p);
+// Północny Cypr (bez kodu ISO) dołączamy do Cypru
+const cyprus = geoms.filter(g=>g.id==='196'||g.properties.name==='N. Cyprus');
+const asia = PANSTWA.map(p=>{
+  const gs = p[0]==='196' ? cyprus : geoms.filter(g=>g.id===p[0]);
+  if(!gs.length) throw 'brak '+p[1];
+  return {p, f: gs.length>1 ? {type:'Feature',geometry:topojson.merge(WORLD,gs)} : topojson.feature(WORLD,gs[0])};
+});
+const proj = d3.geoAzimuthalEqualArea().rotate([-100,-42]);
+const FC={type:'FeatureCollection',features:asia.map(a=>a.f)};
+proj.fitWidth(W-24, FC); proj.translate([proj.translate()[0]+12, proj.translate()[1]+12]);
+H = Math.ceil(d3.geoPath(proj).bounds(FC)[1][1]+12);
+proj.clipExtent([[-5,-5],[W+5,H+5]]);
+const path = d3.geoPath(proj).digits(1);
+const r1 = v=>Math.round(v*10)/10;
+const out = asia.map(({p,f})=>{
+  const c = proj(p[3]); const a = path.area(f); const ct = path.centroid(f);
+  return {id:p[0], n:p[1], s:p[2], x:r1(c[0]), y:r1(c[1]), cx:r1(ct[0]), cy:r1(ct[1]), a:Math.round(a), u:p[4]||'', d:path(f)};
+});
+// kolorowanie: sąsiednie państwa (wspólna granica) dostają różne kolory
+const nb = topojson.neighbors(geoms);
+const idOf = g => (g.properties.name==='N. Cyprus' ? '196' : g.id);
+const sasiedzi = {}; PANSTWA.forEach(p=>sasiedzi[p[0]]=new Set());
+geoms.forEach((g,i)=>{ const a=idOf(g); if(!sasiedzi[a]) return;
+  nb[i].forEach(j=>{ const b=idOf(geoms[j]); if(b!==a && sasiedzi[b]){ sasiedzi[a].add(b); sasiedzi[b].add(a);} }); });
+const kol = {};
+PANSTWA.map(p=>p[0]).sort((a,b)=>sasiedzi[b].size-sasiedzi[a].size).forEach(id=>{
+  const zajete = new Set([...sasiedzi[id]].map(s=>kol[s]));
+  let c=0; while(zajete.has(c)) c++; kol[id]=c; });
+out.forEach(o=>o.k=kol[o.id]);// tło: pozostałe lądy i Palestyna
+const asiaIds = new Set(PANSTWA.map(p=>p[0]));
+const rest = geoms.filter(g=>!asiaIds.has(g.id) && g.properties.name!=='N. Cyprus' && g.id!=='275' && g.id!=='010');
+const tlo = path(topojson.merge(WORLD,rest));
+const pal = path(topojson.feature(WORLD, geoms.find(g=>g.id==='275')));
+const grat = path(d3.geoGraticule().step([20,20])());
+document.getElementById('OUT').textContent = JSON.stringify({W,H,panstwa:out,tlo,pal,grat});
+}catch(e){ document.getElementById('OUT').textContent='ERR '+e; }
+</script>
