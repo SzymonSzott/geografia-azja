@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Azja — rozpoznaj państwo</title>
+
+<script>
+const GC_KOD = 'szymonszott';
+if(GC_KOD){
+  const gs = document.createElement('script');
+  gs.async = true; gs.src = 'https://gc.zgo.at/count.js';
+  gs.setAttribute('data-goatcounter', 'https://'+GC_KOD+'.goatcounter.com/count');
+  document.head.appendChild(gs);
+}
+function stat(sciezka, tytul){
+  try{ if(window.goatcounter && typeof window.goatcounter.count === 'function')
+    window.goatcounter.count({path:sciezka, title:tytul, event:true}); }catch(e){}
+}
+</script>
+
+<style>
+:root{
+  --bg:#f3f7f8; --card:#ffffff; --ink:#172126; --muted:#5a6a72; --line:#d9e3e7;
+  --accent:#1b6f8c; --accent-soft:#e3f1f6; --good:#1f7a4d; --good-bg:#e4f3ea;
+  --bad:#b0303e; --bad-bg:#fbe8ea; --warn:#8a5a00; --warn-bg:#fbf1dc;
+  --sea:#cfe5f0; --grat:#b5d3e2; --rest:#e9e6df; --rest-line:#c9c4ba;
+  --land:#f1ede4; --border:#8d887e; --target:#f2b632; --target-line:#5b3d00;
+  --cap:#c62828; --cap-ring:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11181b; --card:#192226; --ink:#e4ecef; --muted:#9db0b8; --line:#2c3a40;
+    --accent:#6cc3e0; --accent-soft:#1d3139; --good:#78c99b; --good-bg:#1c2f23;
+    --bad:#ec8f99; --bad-bg:#352024; --warn:#e8c06a; --warn-bg:#33291a;
+    --sea:#1b3442; --grat:#24485a; --rest:#2a2d2e; --rest-line:#3c4042;
+    --land:#33383a; --border:#7f8a8e; --target:#d9a52a; --target-line:#fff1c9;
+    --cap:#ff7b7b; --cap-ring:#11181b;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.5rem;margin:0 0 2px;letter-spacing:-.01em}
+h2{font-size:1.1rem;margin:0 0 10px}
+.sub{color:var(--muted);font-size:.92rem;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);padding:8px 16px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) button.primary{color:#0e1a1f} }
+button.sm{padding:4px 10px;font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.count{color:var(--muted);font-size:.85rem}
+.hide{display:none !important}
+.note{font-size:.82rem;color:var(--muted);margin-top:12px}
+
+/* pytanie */
+.bar{height:5px;background:var(--line)}
+.bar>i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.ask{padding:12px 14px;border-bottom:1px solid var(--line)}
+.ask .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:10px}
+.ask .q{font-size:1.1rem;font-weight:600}
+.ask .meta{color:var(--muted);font-size:.85rem;white-space:nowrap}
+.fields{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end}
+.fields label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted);font-weight:600}
+.fields input{font:inherit;font-size:1rem;padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);width:100%}
+.fields input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.fields input.ok{border-color:var(--good);background:var(--good-bg)}
+.fields input.no{border-color:var(--bad);background:var(--bad-bg)}
+@media (max-width:640px){ .fields{grid-template-columns:1fr 1fr} .fields button{grid-column:span 1} }
+.fb{padding:10px 14px;font-size:.95rem;border-bottom:1px solid var(--line);display:grid;gap:3px}
+.fb .ok{color:var(--good)} .fb .no{color:var(--bad)} .fb .warn{color:var(--warn)}
+
+/* mapa */
+.mapcard{padding:0;overflow:hidden}
+.toolbar{display:flex;gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.toolbar .sp{flex:1}
+.mapbox{position:relative;background:var(--sea);touch-action:none}
+#map{display:block;width:100%;height:auto;max-height:64vh;cursor:grab;user-select:none;-webkit-user-select:none}
+#map.drag{cursor:grabbing}
+#map path,#map circle{vector-effect:non-scaling-stroke}
+.sea{fill:var(--sea)}
+.grat{fill:none;stroke:var(--grat);stroke-width:.6}
+.rest{fill:var(--rest);stroke:var(--rest-line);stroke-width:.6}
+.c{fill:var(--land);stroke:var(--border);stroke-width:.7;stroke-linejoin:round}
+.c.t{fill:var(--target);stroke:var(--target-line);stroke-width:2}
+.ring{fill:none;stroke:var(--target-line);stroke-width:2;stroke-dasharray:4 3}
+.cap{fill:var(--cap);stroke:var(--cap-ring);stroke-width:1.5}
+.lbl{fill:var(--ink);paint-order:stroke;stroke:var(--card);stroke-linejoin:round;font-weight:700;pointer-events:none}
+.hint{position:absolute;left:10px;bottom:8px;font-size:.78rem;color:var(--muted);background:var(--card);
+  border-radius:6px;padding:2px 8px;opacity:.9;pointer-events:none}
+
+/* wynik */
+.score{font-size:2.8rem;font-weight:700;line-height:1;margin:0 0 6px}
+.score small{font-size:1rem;font-weight:400;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{text-align:left;padding:6px 8px 6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.82rem}
+td .ok{color:var(--good)} td .no{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Azja — rozpoznaj państwo</h1>
+  <p class="sub">Na mapie zaznaczono kontur państwa. Wpisz jego nazwę i stolicę. Drobne literówki są wybaczane.</p>
+
+  <!-- wynik -->
+  <div class="card hide" id="result">
+    <p class="score" id="rScore"></p>
+    <p class="sub" id="rNote" style="margin-bottom:10px"></p>
+    <div class="row" style="margin-bottom:14px">
+      <button class="primary" id="again">Nowy test</button>
+      <button id="redo">Powtórz błędne</button>
+    </div>
+    <table id="rTable"></table>
+  </div>
+
+  <!-- pytanie + mapa -->
+  <div class="card mapcard" id="quiz">
+    <div class="bar"><i id="prog"></i></div>
+    <form class="ask" id="form" autocomplete="off">
+      <div class="top">
+        <span class="q">Jakie to państwo i jaka jest jego stolica?</span>
+        <span class="meta" id="qMeta"></span>
+      </div>
+      <div class="fields">
+        <label>Państwo<input id="inP" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+        <label>Stolica<input id="inS" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+        <button class="primary" id="check" type="submit">Sprawdź ⏎</button>
+        <button id="quit" type="button">Zakończ</button>
+      </div>
+    </form>
+    <div class="fb hide" id="fb"></div>
+    <div class="toolbar">
+      <span class="count">Zaznaczone państwo jest na żółto</span>
+      <span class="sp"></span>
+      <button class="sm" id="zIn" title="Przybliż">+</button>
+      <button class="sm" id="zOut" title="Oddal">−</button>
+      <button class="sm" id="zReset" title="Wróć do widoku państwa">⟲ reset widoku</button>
+    </div>
+    <div class="mapbox">
+      <svg id="map" role="img" aria-label="Mapa Azji z zaznaczonym państwem"></svg>
+      <div class="hint">przeciągnij, aby przesunąć · kółko myszy lub +/− = zoom</div>
+    </div>
+  </div>
+
+  <p class="note">Granice: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener" style="color:var(--accent)">Natural Earth</a>
+  1:50 mln (domena publiczna), uproszczone.</p>
+</div>
+
+<script src="dane-mapa.js"></script>
+<script>
+/* ======================= pytania ======================= */
+// id ISO, część mapy (do obrotu „północ u góry”), inne akceptowane nazwy państwa i stolicy
+const PYTANIA = [
+  ['364','bw', ['Tehran'], ['Tehran']],
+  ['368','bw', ['Iraq'], ['Baghdad']],
+  ['048','bw', ['Bahrain'], []],
+  ['050','ap', ['Bangladesh'], ['Dakka','Daka','Dhakka']],
+  ['064','ap', ['Butan'], ['Thimpu','Timphu','Timpu','Thimbu']],
+  ['004','ap', ['Afghanistan'], []],
+  ['626','apw', ['Timor-Leste','Timor Leste'], []],
+  ['096','apw', ['Brunei Darussalam'], []],
+  ['116','apw', ['Kambodza','Cambodia'], ['Phnom Pen','Pnom Pen','Pnom Penh']],
+  ['104','apw', ['Myanmar','Birma','Burma'], ['Naypyitaw','Nay Pyi Taw','Nepjidaw','Najpjidaw','Neypyidaw']],
+  ['860','ap', [], ['Tashkent']],
+  ['795','ap', [], ['Aszgabat','Ashgabat','Aszchabat']],
+  ['417','ap', ['Kirgizja','Kirgizstan','Kyrgyzstan'], ['Bishkek']],
+  ['762','ap', ['Tadzykistan','Tajikistan','Tadzikistan'], ['Dushanbe']],
+  ['458','apw', ['Malaysia','Malajzja'], []],
+];
+const P = MAPA.panstwa, byId = Object.fromEntries(P.map(p=>[p.id,p]));
+const Q = PYTANIA.map(([id,reg,altP,altS])=>({id, reg, p:byId[id], altP, altS}));
+
+/* ======================= sprawdzanie pisowni ======================= */
+function norm(s){
+  return s.toLowerCase().replace(/ł/g,'l').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z]/g,'');
+}
+function odl(a, b){                       // Damerau-Levenshtein (z przestawieniem sąsiednich liter)
+  const d = [];
+  for(let i=0;i<=a.length;i++){ d[i]=[i]; }
+  for(let j=0;j<=b.length;j++) d[0][j]=j;
+  for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++){
+    const c = a[i-1]===b[j-1] ? 0 : 1;
+    d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+c);
+    if(i>1 && j>1 && a[i-1]===b[j-2] && a[i-2]===b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2]+1);
+  }
+  return d[a.length][b.length];
+}
+function tolerancja(n){ return n<=4 ? 0 : n<=6 ? 1 : n<=10 ? 2 : 3; }
+// wynik: 'ok' (dokładnie), 'prawie' (z literówką / inną formą), 'zle'
+function ocen(wpis, poprawna, inne, cudze){
+  const w = norm(wpis);
+  if(!w) return 'zle';
+  if(wpis.trim().replace(/\s+/g,' ').toLowerCase() === poprawna.toLowerCase()) return 'ok';
+  let best = Infinity, pasuje = false;
+  [poprawna, ...inne].forEach(f=>{
+    const n = norm(f), d = odl(w, n);
+    best = Math.min(best, d);
+    if(d <= tolerancja(n.length)) pasuje = true;
+  });
+  if(!pasuje) return 'zle';
+  // jeśli wpis jest bliżej nazwy innego państwa/stolicy, to nie jest literówka (np. Irak zamiast Iran)
+  if(cudze.some(c=>odl(w, norm(c)) < best)) return 'zle';
+  return 'prawie';
+}
+
+/* ======================= mapa ======================= */
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('map');
+function el(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+el('rect', {class:'sea', x:-MAPA.W, y:-MAPA.H, width:MAPA.W*3, height:MAPA.H*3}, svg);
+const gRot = el('g', {}, svg);
+el('path', {class:'grat', d:MAPA.grat}, gRot);
+el('path', {class:'rest', d:MAPA.tlo}, gRot);
+el('path', {class:'c', d:MAPA.pal}, gRot);
+const gC = el('g', {}, gRot), gX = el('g', {}, gRot);
+const nodes = {};
+P.forEach(p=>{ nodes[p.id] = el('path', {class:'c', d:p.d}, gC); });
+
+let rot = {a:0, px:0, py:0};
+function toOuter(x, y){
+  if(!rot.a) return [x, y];
+  const r = rot.a*Math.PI/180, c = Math.cos(r), s = Math.sin(r), dx = x-rot.px, dy = y-rot.py;
+  return [rot.px + dx*c - dy*s, rot.py + dx*s + dy*c];
+}
+let view = {x:0, y:0, w:MAPA.W}, home = null;
+function applyView(){
+  view.h = view.w * MAPA.H / MAPA.W;
+  svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+  const u = view.w / (svg.clientWidth || 1);          // jednostek mapy na 1 piksel ekranu
+  gX.querySelectorAll('[data-r]').forEach(c=>c.setAttribute('r', Math.max(+c.dataset.min||0, c.dataset.r*u)));
+  gX.querySelectorAll('text').forEach(t=>{
+    const x = +t.dataset.x, y = +t.dataset.y;
+    t.setAttribute('font-size', 14*u); t.style.strokeWidth = 4*u+'px';
+    t.setAttribute('x', x + 9*u); t.setAttribute('y', y + 5*u);
+    t.setAttribute('transform', rot.a ? `rotate(${-rot.a} ${x} ${y})` : '');
+  });
+}
+function clampView(){
+  view.w = Math.min(MAPA.W, Math.max(MAPA.W/40, view.w));
+  view.h = view.w * MAPA.H / MAPA.W;
+  view.x = Math.min(MAPA.W - view.w*0.25, Math.max(-view.w*0.75, view.x));
+  view.y = Math.min(MAPA.H - view.h*0.25, Math.max(-view.h*0.75, view.y));
+}
+function zoomAt(f, cx, cy){
+  const nw = view.w * f;
+  view.x = cx - (cx - view.x) * nw / view.w;
+  view.y = cy - (cy - view.y) * nw / view.w;
+  view.w = nw; clampView(); applyView();
+}
+function toMap(clientX, clientY){
+  const r = svg.getBoundingClientRect();
+  return [view.x + (clientX - r.left) / r.width * view.w, view.y + (clientY - r.top) / r.height * view.h];
+}
+// widok państwa: samo państwo w środku, dookoła sąsiedzi (dla bardzo małych państw — większy wycinek)
+function ustawWidok(id){
+  const b = nodes[id].getBBox();
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  [[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].forEach(([x,y])=>{
+    const [ox,oy] = toOuter(x,y);
+    x0=Math.min(x0,ox); y0=Math.min(y0,oy); x1=Math.max(x1,ox); y1=Math.max(y1,oy);
+  });
+  const span = Math.max(x1-x0, (y1-y0) * MAPA.W / MAPA.H);
+  const w = Math.max(span * 2.4, 150);
+  view = {x:(x0+x1)/2 - w/2, y:(y0+y1)/2 - (w*MAPA.H/MAPA.W)/2, w};
+  clampView(); home = {...view}; applyView();
+}
+svg.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const [mx,my] = toMap(e.clientX, e.clientY);
+  zoomAt(e.deltaY > 0 ? 1.25 : 0.8, mx, my);
+}, {passive:false});
+document.getElementById('zIn').onclick = ()=>zoomAt(0.7, view.x+view.w/2, view.y+view.h/2);
+document.getElementById('zOut').onclick = ()=>zoomAt(1/0.7, view.x+view.w/2, view.y+view.h/2);
+document.getElementById('zReset').onclick = ()=>{ if(home){ view = {...home}; applyView(); } };
+
+const ptrs = new Map(); let drag = null, pinch = null;
+svg.addEventListener('pointerdown', e=>{
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(ptrs.size === 1) drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y, moved:false};
+  if(ptrs.size === 2){
+    const [a,b] = [...ptrs.values()];
+    pinch = {d:Math.hypot(a.x-b.x, a.y-b.y), w:view.w, c:toMap((a.x+b.x)/2, (a.y+b.y)/2)};
+    drag = null;
+  }
+});
+svg.addEventListener('pointermove', e=>{
+  if(!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(pinch && ptrs.size === 2){
+    const [a,b] = [...ptrs.values()];
+    zoomAt((pinch.w * pinch.d / Math.hypot(a.x-b.x, a.y-b.y)) / view.w, pinch.c[0], pinch.c[1]);
+    return;
+  }
+  if(drag){
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if(!drag.moved && Math.hypot(dx,dy) > 4){ drag.moved = true; svg.classList.add('drag'); svg.setPointerCapture(e.pointerId); }
+    if(drag.moved){
+      const s = view.w / svg.getBoundingClientRect().width;
+      view.x = drag.vx - dx*s; view.y = drag.vy - dy*s; clampView(); applyView();
+    }
+  }
+});
+function endPtr(e){
+  ptrs.delete(e.pointerId);
+  if(ptrs.size < 2) pinch = null;
+  if(ptrs.size === 0){ drag = null; svg.classList.remove('drag'); }
+}
+svg.addEventListener('pointerup', endPtr);
+svg.addEventListener('pointercancel', endPtr);
+window.addEventListener('resize', applyView);
+
+/* ======================= test ======================= */
+const T = {pula:[], i:0, wyniki:[], czeka:false};
+const inP = document.getElementById('inP'), inS = document.getElementById('inS');
+const fb = document.getElementById('fb'), btn = document.getElementById('check');
+// nazwy innych państw i stolic z całej mapy — chronią przed uznaniem np. „Irak” za literówkę w „Iran”
+const wszystkieP = P.map(p=>p.n), wszystkieS = P.map(p=>p.s);
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function start(lista){
+  T.pula = lista; T.i = 0; T.wyniki = [];
+  document.getElementById('result').classList.add('hide');
+  document.getElementById('quiz').classList.remove('hide');
+  stat(`azja/kontury-start/pytan-${lista.length}`, 'Azja: test konturów — start');
+  pokaz();
+}
+function pokaz(){
+  const q = T.pula[T.i];
+  T.czeka = false;
+  P.forEach(p=>nodes[p.id].classList.toggle('t', p.id===q.id));
+  gX.innerHTML = '';
+  if(q.p.a < 130) el('circle', {class:'ring', cx:q.p.cx, cy:q.p.cy, 'data-r':16, 'data-min':Math.sqrt(q.p.a)}, gX);
+  const k = MAPA.polnoc[q.reg] || 0;
+  rot = {a:-k, px:q.p.cx, py:q.p.cy};
+  gRot.setAttribute('transform', rot.a ? `rotate(${rot.a} ${rot.px} ${rot.py})` : '');
+  ustawWidok(q.id);
+  inP.value = ''; inS.value = ''; inP.className = ''; inS.className = '';
+  inP.readOnly = inS.readOnly = false;
+  fb.classList.add('hide');
+  btn.textContent = 'Sprawdź ⏎';
+  meta();
+  document.getElementById('prog').style.width = (T.i / T.pula.length * 100) + '%';
+  inP.focus({preventScroll:true});
+}
+function meta(){
+  const pkt = T.wyniki.reduce((s,w)=>s + (w.p!=='zle') + (w.s!=='zle'), 0);
+  document.getElementById('qMeta').textContent = `${T.i+1} / ${T.pula.length} · ${pkt} pkt`;
+}
+function linia(ocena, wpis, poprawna, co){
+  if(ocena==='ok') return `<span class="ok">✓ ${co}: ${poprawna}</span>`;
+  if(ocena==='prawie') return `<span class="warn">✓ ${co}: uznane — poprawna pisownia: <b>${poprawna}</b></span>`;
+  return `<span class="no">✗ ${co}: ${wpis.trim() ? `„${esc(wpis.trim())}” — ` : ''}poprawnie: <b>${poprawna}</b></span>`;
+}
+function esc(s){ return s.replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+function sprawdz(){
+  const q = T.pula[T.i], p = q.p;
+  const oP = ocen(inP.value, p.n, q.altP, wszystkieP.filter(n=>n!==p.n));
+  const oS = ocen(inS.value, p.s, q.altS, wszystkieS.filter(n=>n!==p.s));
+  T.wyniki.push({q, p:oP, s:oS, wP:inP.value.trim(), wS:inS.value.trim()});
+  T.czeka = true;
+  inP.className = oP==='zle' ? 'no' : 'ok'; inS.className = oS==='zle' ? 'no' : 'ok';
+  inP.readOnly = inS.readOnly = true;
+  fb.innerHTML = linia(oP, inP.value, p.n, 'Państwo') + linia(oS, inS.value, p.s, 'Stolica');
+  fb.classList.remove('hide');
+  // pokaż stolicę na mapie
+  el('circle', {class:'cap', cx:p.x, cy:p.y, 'data-r':4.5}, gX);
+  const t = el('text', {class:'lbl', 'data-x':p.x, 'data-y':p.y}, gX);
+  t.textContent = p.s;
+  applyView();
+  meta();
+  btn.textContent = T.i+1 < T.pula.length ? 'Dalej ⏎' : 'Wynik ⏎';
+  btn.focus({preventScroll:true});
+}
+document.getElementById('form').onsubmit = e=>{
+  e.preventDefault();
+  if(!T.czeka){
+    // Enter w polu „Państwo” przechodzi do „Stolicy”
+    if(document.activeElement === inP && !inS.value.trim()){ inS.focus(); return; }
+    sprawdz();
+  } else if(T.i+1 < T.pula.length){ T.i++; pokaz(); }
+  else wynik();
+};
+document.getElementById('quit').onclick = ()=>{ if(T.wyniki.length) wynik(); else start(shuffle(Q.slice())); };
+
+function wynik(){
+  const n = T.wyniki.length, max = 2*n;
+  const pkt = T.wyniki.reduce((s,w)=>s + (w.p!=='zle') + (w.s!=='zle'), 0);
+  const proc = Math.round(pkt/max*100);
+  document.getElementById('rScore').innerHTML = `${pkt} / ${max} <small>pkt = ${proc}%</small>`;
+  document.getElementById('rNote').textContent =
+    (proc===100 ? 'Bezbłędnie!' : proc>=90 ? 'Bardzo dobrze.' : proc>=75 ? 'Dobrze — powtórz błędne.' : proc>=50 ? 'Warto jeszcze poćwiczyć.' : 'Poćwicz jeszcze i spróbuj ponownie.')
+    + ' Każde państwo: 1 pkt za nazwę i 1 pkt za stolicę.';
+  const kom = (o, w, popr)=> o==='ok' ? `<span class="ok">✓</span> ${popr}`
+    : o==='prawie' ? `<span class="ok">✓</span> ${popr} <span class="count">(wpisano: ${esc(w)})</span>`
+    : `<span class="no">✗</span> ${popr} <span class="count">(wpisano: ${w ? esc(w) : '—'})</span>`;
+  document.getElementById('rTable').innerHTML = '<tr><th>Państwo</th><th>Stolica</th></tr>' +
+    T.wyniki.map(w=>`<tr><td>${kom(w.p, w.wP, w.q.p.n)}</td><td>${kom(w.s, w.wS, w.q.p.s)}</td></tr>`).join('');
+  T.bledne = T.wyniki.filter(w=>w.p==='zle' || w.s==='zle').map(w=>w.q);
+  document.getElementById('redo').classList.toggle('hide', T.bledne.length===0);
+  document.getElementById('quiz').classList.add('hide');
+  document.getElementById('result').classList.remove('hide');
+  const kosz = Math.min(90, Math.floor(proc/10)*10);
+  stat(`azja/kontury-koniec/pytan-${n}/wynik-${kosz}-${kosz===90?100:kosz+9}-proc`, 'Azja: test konturów — koniec');
+}
+document.getElementById('again').onclick = ()=>start(shuffle(Q.slice()));
+document.getElementById('redo').onclick = ()=>start(shuffle(T.bledne.slice()));
+
+start(shuffle(Q.slice()));
+</script>
+</body>
+</html>
